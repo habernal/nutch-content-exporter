@@ -1,12 +1,15 @@
-package sf.net.nutchcontentexpoerter;
+package net.sf.nutchcontentexporter;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.util.GenericOptionsParser;
+import org.apache.hadoop.util.Tool;
+import org.apache.hadoop.util.ToolRunner;
 import org.apache.nutch.protocol.Content;
-import org.apache.nutch.util.NutchConfiguration;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -14,22 +17,28 @@ import java.io.FileOutputStream;
 /**
  *
  */
-public class NutchContentExporter {
+public class NutchContentExporter extends Configured implements Tool {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
+        ToolRunner.run(new NutchContentExporter(), args);
+    }
 
-        if (args.length != 2) {
+    @Override
+    public int run(String[] args) throws Exception {
+        Configuration conf = getConf();
+        String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
+
+        if (otherArgs.length != 2) {
             System.out.println("usage: segmentdir (-local | -dfs <namenode:port>) outputdir");
-            return;
+            return 1;
         }
 
         try {
-            Configuration conf = NutchConfiguration.create();
             FileSystem fs = FileSystem.get(conf);
 
-            String segment = args[0];
+            String segment = otherArgs[0];
 
-            File outDir = new File(args[1]);
+            File outDir = new File(otherArgs[1]);
             if (!outDir.exists()) {
                 if (outDir.mkdir()) {
                     System.out.println("Creating output dir " + outDir.getAbsolutePath());
@@ -58,5 +67,7 @@ public class NutchContentExporter {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        return 0;
     }
 }
