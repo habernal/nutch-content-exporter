@@ -1,16 +1,21 @@
 package sf.net.nutchcontentexpoerter;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.Text;
+import org.apache.nutch.protocol.Content;
 import org.apache.nutch.util.NutchConfiguration;
 
 import java.io.File;
 import java.io.FileOutputStream;
 
-
 /**
  *
  */
 public class NutchContentExporter {
-/*
+
     public static void main(String[] args) {
 
         if (args.length != 2) {
@@ -22,7 +27,6 @@ public class NutchContentExporter {
             Configuration conf = NutchConfiguration.create();
             FileSystem fs = FileSystem.get(conf);
 
-
             String segment = args[0];
 
             File outDir = new File(args[1]);
@@ -33,7 +37,8 @@ public class NutchContentExporter {
             }
 
             Path file = new Path(segment, Content.DIR_NAME + "/part-00000/data");
-            SequenceFile.Reader reader = new SequenceFile.Reader(fs, file, conf);
+            // new 2.0 API
+            SequenceFile.Reader reader = new SequenceFile.Reader(conf, SequenceFile.Reader.file(file));
 
 
             Text key = new Text();
@@ -53,5 +58,5 @@ public class NutchContentExporter {
         } catch (Exception e) {
             e.printStackTrace();
         }
-*/
+    }
 }
