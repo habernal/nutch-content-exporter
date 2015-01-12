@@ -38,7 +38,7 @@ $ tree /tmp/crawl/
 
 
 The output files are stored under the original URL with all slashes ("/") replaced by three
-underlines ("___"), and all files end with .html e.g.
+underlines ("___"), e.g.
 
 http://www.example.com/test.html -> www.example.com___test.html
-http://www.example.com/test/ -> www.example.com___test___.html
+http://www.example.com/test/ -> www.example.com___test___

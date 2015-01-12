@@ -38,6 +38,8 @@ public class NutchContentExporter
         implements Tool
 {
 
+    private static final int MAX_FILE_NAME_LENGTH = 255;
+
     public static void main(String[] args)
             throws Exception
     {
@@ -79,8 +81,13 @@ public class NutchContentExporter
 
             while (reader.next(key, content)) {
                 String filename =
-                        key.toString().replaceFirst("http://", "").replaceAll("/", "___").trim()
-                                + ".html";
+                        key.toString().replaceFirst("http://", "").replaceAll("/", "___").trim();
+
+                // limit the output file name to 255 characters
+                if (filename.length() > MAX_FILE_NAME_LENGTH) {
+                    filename = filename.substring(0, MAX_FILE_NAME_LENGTH);
+                }
+
 
                 File f = new File(outDir.getCanonicalPath() + "/" + filename);
                 FileOutputStream fos = new FileOutputStream(f);
