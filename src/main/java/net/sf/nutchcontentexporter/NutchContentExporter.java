@@ -1,3 +1,19 @@
+/*
+ * Copyright 2015 Ivan Habernal
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package net.sf.nutchcontentexporter;
 
 import org.apache.hadoop.conf.Configuration;
@@ -15,21 +31,29 @@ import java.io.File;
 import java.io.FileOutputStream;
 
 /**
- *
+ * Simple commaind line tool for exporting HTML pages crawled by Apache Nutch
  */
-public class NutchContentExporter extends Configured implements Tool {
+public class NutchContentExporter
+        extends Configured
+        implements Tool
+{
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args)
+            throws Exception
+    {
         ToolRunner.run(new NutchContentExporter(), args);
     }
 
     @Override
-    public int run(String[] args) throws Exception {
+    public int run(String[] args)
+            throws Exception
+    {
         Configuration conf = getConf();
         String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
 
         if (otherArgs.length != 2) {
-            System.out.println("usage: segmentdir (-local | -dfs <namenode:port>) outputdir");
+            System.out.println(
+                    "two params required: segmentdir (-local | -dfs <namenode:port>) outputdir");
             return 1;
         }
 
@@ -40,21 +64,23 @@ public class NutchContentExporter extends Configured implements Tool {
 
             File outDir = new File(otherArgs[1]);
             if (!outDir.exists()) {
-                if (outDir.mkdir()) {
+                if (outDir.mkdirs()) {
                     System.out.println("Creating output dir " + outDir.getAbsolutePath());
                 }
             }
 
             Path file = new Path(segment, Content.DIR_NAME + "/part-00000/data");
             // new 2.0 API
-            SequenceFile.Reader reader = new SequenceFile.Reader(conf, SequenceFile.Reader.file(file));
-
+            SequenceFile.Reader reader = new SequenceFile.Reader(conf,
+                    SequenceFile.Reader.file(file));
 
             Text key = new Text();
             Content content = new Content();
 
             while (reader.next(key, content)) {
-                String filename = key.toString().replaceFirst("http://", "").replaceAll("/", "___").trim();
+                String filename =
+                        key.toString().replaceFirst("http://", "").replaceAll("/", "___").trim()
+                                + ".html";
 
                 File f = new File(outDir.getCanonicalPath() + "/" + filename);
                 FileOutputStream fos = new FileOutputStream(f);
@@ -64,8 +90,9 @@ public class NutchContentExporter extends Configured implements Tool {
             }
             reader.close();
             fs.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
         }
 
         return 0;
