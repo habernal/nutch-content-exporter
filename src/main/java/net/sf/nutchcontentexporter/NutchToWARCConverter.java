@@ -16,6 +16,7 @@
 
 package net.sf.nutchcontentexporter;
 
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
@@ -43,7 +44,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Converts a content from Nutch stored in a segment folder into a gzipped WARC file
+ * Converts a content from Nutch stored in a segment folder into a bz2 WARC file
  *
  * @author Ivan Habernal
  */
@@ -53,10 +54,8 @@ public class NutchToWARCConverter
 {
     protected RecordIDGenerator generator = new UUIDGenerator();
 
-    private static final boolean COMPRESS = true;
-
     /**
-     * Converts a content from Nutch stored in a segment folder into a gzipped WARC file
+     * Converts a content from Nutch stored in a segment folder into a bz2 WARC file
      *
      * @param segmentFile Nutch segment folder
      * @param warc        output warc file
@@ -73,9 +72,11 @@ public class NutchToWARCConverter
                 SequenceFile.Reader.file(segmentFile));
 
         // create a warc writer
-        BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(warc));
-        WARCWriter writer = new WARCWriter(new AtomicInteger(), bos, warc,
-                new WARCWriterPoolSettingsData("", "", -1, COMPRESS, null, null, generator));
+        OutputStream outputStream = new BZip2CompressorOutputStream(
+                new BufferedOutputStream(new FileOutputStream(warc)));
+        // we don't compress using the built-in GZ support, use bz2 instead
+        WARCWriter writer = new WARCWriter(new AtomicInteger(), outputStream, warc,
+                new WARCWriterPoolSettingsData("", "", -1, false, null, null, generator));
 
         // warcinfo record
         writer.writeWarcinfoRecord(warc.getName(),
@@ -141,8 +142,8 @@ public class NutchToWARCConverter
 
     /**
      * Input: Nutch segment folder (e.g. "20150303005802")
-     * Ouput: GZipped WARC file (e.g. "20150303005802.warc.gz")
-     * Third parameter is an ouput file prefix (e.g. "prefix20150303005802.warc.gz")
+     * Ouput: GZipped WARC file (e.g. "20150303005802.warc.bz2")
+     * Third parameter is an ouput file prefix (e.g. "prefix20150303005802.warc.bz2")
      *
      * @param args args
      * @return int
@@ -176,7 +177,7 @@ public class NutchToWARCConverter
 
             String segmentName = new File(segmentDir).getName();
             nutchSegmentToWARCFile(file,
-                    new File(outDir, outputFilePrefix + segmentName + ".warc.gz"), conf);
+                    new File(outDir, outputFilePrefix + segmentName + ".warc.bz2"), conf);
 
             fs.close();
         }
