@@ -4,7 +4,7 @@ Simple command line java program for exporting HTML pages crawled by Apache Nutc
 
 Copyright (c) 2015 Ivan Habernal
 
-## Exporting segment content to .warc.gz file
+## Exporting segment content to .warc.bz2 file
 
 Usage:
 
@@ -43,7 +43,9 @@ where the input folder is the Nutch segment
                 ├── data
                 └── index
 
-will generate `/tmp/out/prefix_20150109134429.warc.gz`
+will generate `/tmp/out/prefix_20150109134429.warc.bz2`
+
+It exports only `text/xml` and `text/html` content type; see `NutchToWARCConverter.main()`
 
 ## Exporting uncompressed html files directly to file system
 

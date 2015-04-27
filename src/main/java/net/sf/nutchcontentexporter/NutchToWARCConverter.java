@@ -16,6 +16,8 @@
 
 package net.sf.nutchcontentexporter;
 
+import net.sf.nutchcontentexporter.filter.ContentTypeFilter;
+import net.sf.nutchcontentexporter.filter.ExportContentFilter;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -53,6 +55,22 @@ public class NutchToWARCConverter
         implements Tool
 {
     protected RecordIDGenerator generator = new UUIDGenerator();
+
+    /**
+     * Filters for deciding whether a particular crawled document should be exported to the
+     * final WARC file
+     */
+    private final Set<ExportContentFilter> filters = new HashSet<ExportContentFilter>();
+
+    /**
+     * Add the filters to the filter set
+     *
+     * @param filters filters
+     */
+    public void addFilters(ExportContentFilter... filters)
+    {
+        this.filters.addAll(Arrays.asList(filters));
+    }
 
     /**
      * Converts a content from Nutch stored in a segment folder into a bz2 WARC file
@@ -133,11 +151,20 @@ public class NutchToWARCConverter
         for (String extraHeader : extraHeaders) {
             String value = content.getMetadata().get(extraHeader);
             if (value != null) {
-                recordInfo.addExtraHeader(extraHeader, value);
+                recordInfo.addExtraHeader("Nutch_" + extraHeader, value);
             }
         }
 
-        writer.writeRecord(recordInfo);
+        // apply filters
+        boolean acceptExport = true;
+        for (ExportContentFilter filter : filters) {
+            acceptExport &= filter.acceptContent(recordInfo);
+        }
+
+        // and write only if we accept this content
+        if (acceptExport) {
+            writer.writeRecord(recordInfo);
+        }
     }
 
     /**
@@ -191,7 +218,10 @@ public class NutchToWARCConverter
     public static void main(String[] args)
     {
         try {
-            ToolRunner.run(new NutchToWARCConverter(), args);
+            NutchToWARCConverter nutchToWARCConverter = new NutchToWARCConverter();
+            ContentTypeFilter contentTypeFilter = new ContentTypeFilter();
+            nutchToWARCConverter.addFilters(contentTypeFilter);
+            ToolRunner.run(nutchToWARCConverter, args);
         }
         catch (Exception e) {
             e.printStackTrace();
