@@ -19,8 +19,9 @@ package net.sf.nutchcontentexporter.filter;
 import org.apache.commons.io.IOUtils;
 import org.archive.io.warc.WARCRecordInfo;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.util.List;
 
 /**
  * @author Ivan Habernal
@@ -31,11 +32,14 @@ public class CreativeCommonsCandidateFilter
     @Override
     public boolean acceptContent(WARCRecordInfo recordInfo)
     {
-        InputStream contentStream = recordInfo.getContentStream();
+        ByteArrayInputStream contentStream = (ByteArrayInputStream) recordInfo.getContentStream();
 
         try {
-            for (String line : IOUtils.readLines(contentStream)) {
-                if (line.matches(".*creativecommons.org/licenses/.*")) {
+            List<String> lines = IOUtils.readLines(contentStream);
+            contentStream.reset();
+
+            for (String line : lines) {
+                if (line.contains("creativecommons")) {
                     return true;
                 }
             }

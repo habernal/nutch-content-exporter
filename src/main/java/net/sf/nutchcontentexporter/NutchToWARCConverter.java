@@ -17,6 +17,7 @@
 package net.sf.nutchcontentexporter;
 
 import net.sf.nutchcontentexporter.filter.ContentTypeFilter;
+import net.sf.nutchcontentexporter.filter.CreativeCommonsCandidateFilter;
 import net.sf.nutchcontentexporter.filter.ExportContentFilter;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 import org.apache.hadoop.conf.Configuration;
@@ -219,8 +220,8 @@ public class NutchToWARCConverter
     {
         try {
             NutchToWARCConverter nutchToWARCConverter = new NutchToWARCConverter();
-            ContentTypeFilter contentTypeFilter = new ContentTypeFilter();
-            nutchToWARCConverter.addFilters(contentTypeFilter);
+            nutchToWARCConverter
+                    .addFilters(new ContentTypeFilter(), new CreativeCommonsCandidateFilter());
             ToolRunner.run(nutchToWARCConverter, args);
         }
         catch (Exception e) {
