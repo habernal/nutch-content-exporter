@@ -55,6 +55,9 @@ public class NutchToWARCConverter
         extends Configured
         implements Tool
 {
+    // Thu, 01 Jan 1970 00:00:01 GMT
+    private static final String DEFAULT_WARC_DATE = "1000";
+
     protected RecordIDGenerator generator = new UUIDGenerator();
 
     /**
@@ -139,13 +142,20 @@ public class NutchToWARCConverter
         recordInfo.setContentLength(byteContent.length);
         recordInfo.setEnforceLength(true);
 
+        String warcDateString = DEFAULT_WARC_DATE;
+
         // convert date to WARC-Date format
         String date = content.getMetadata().get("Date");
-        if (date == null) {
-            date = "Thu, 01 Jan 1970 00:00:01 GMT";
+        if (date != null) {
+            try {
+                warcDateString = String.valueOf(
+                        new SimpleDateFormat("EEE, dd MMM yyyy kk:mm:ss ZZZ", Locale.ENGLISH)
+                                .parse(date).getTime());
+            }
+            catch (ParseException ex) {
+                // ignore
+            }
         }
-        String warcDateString = String.valueOf(new SimpleDateFormat("EEE, dd MMM yyyy kk:mm:ss ZZZ",
-                Locale.ENGLISH).parse(date).getTime());
 
         recordInfo.setCreate14DigitDate(warcDateString);
 
