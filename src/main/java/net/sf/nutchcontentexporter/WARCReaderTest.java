@@ -26,6 +26,7 @@ import org.archive.io.warc.WARCReaderFactory;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 
 /**
  * @author Ivan Habernal
@@ -35,10 +36,43 @@ public class WARCReaderTest
     public static void main(String[] args)
             throws Exception
     {
+        read(args[0]);
+    }
+
+    /**
+     * Reads default (gzipped) warc file
+     *
+     * @param file gz file
+     * @throws IOException
+     */
+    public static void read(String file)
+            throws IOException
+    {
+        WARCReader reader = WARCReaderFactory.get(new File(file));
+
+        int counter = 0;
+        for (ArchiveRecord record : reader) {
+            System.out.println(record.getHeader().getHeaderFields());
+
+            counter++;
+        }
+
+        System.out.println(counter);
+    }
+
+    /**
+     * Reads bz2 warc file
+     *
+     * @param file warc file
+     * @throws IOException
+     */
+    public static void readBz2(String file)
+            throws IOException
+    {
         // decompress bz2 file to tmp file
         File tmpFile = File.createTempFile("tmp", ".warc");
         BZip2CompressorInputStream inputStream = new BZip2CompressorInputStream(
-                new FileInputStream(args[0]));
+                new FileInputStream(file));
 
         IOUtils.copy(inputStream, new FileOutputStream(tmpFile));
 
@@ -51,8 +85,8 @@ public class WARCReaderTest
             counter++;
         }
 
-        System.out.println(counter);
-
         FileUtils.forceDelete(tmpFile);
+
+        System.out.println(counter);
     }
 }

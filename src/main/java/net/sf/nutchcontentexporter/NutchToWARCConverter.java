@@ -47,7 +47,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Converts a content from Nutch stored in a segment folder into a bz2 WARC file
+ * Converts a content from Nutch stored in a segment folder into a compressed WARC file
  *
  * @author Ivan Habernal
  */
@@ -79,11 +79,12 @@ public class NutchToWARCConverter
      * @param segmentFile Nutch segment folder
      * @param warc        output warc file
      * @param conf        hadoop configuraion
+     * @param compressBz2
      * @throws IOException
      * @throws ParseException
      */
     public void nutchSegmentToWARCFile(Path segmentFile, File warc,
-            Configuration conf)
+            Configuration conf, boolean compressBz2)
             throws IOException, ParseException
     {
         // reader for hadoop sequence file
@@ -91,11 +92,19 @@ public class NutchToWARCConverter
                 SequenceFile.Reader.file(segmentFile));
 
         // create a warc writer
-        OutputStream outputStream = new BZip2CompressorOutputStream(
-                new BufferedOutputStream(new FileOutputStream(warc)));
-        // we don't compress using the built-in GZ support, use bz2 instead
+        OutputStream outputStream;
+
+        if (compressBz2) {
+            // we don't compress using the built-in GZ support, use bz2 instead
+            outputStream = new BZip2CompressorOutputStream(
+                    new BufferedOutputStream(new FileOutputStream(warc)));
+        }
+        else {
+            // default compression (gz)
+            outputStream = new FileOutputStream(warc);
+        }
         WARCWriter writer = new WARCWriter(new AtomicInteger(), outputStream, warc,
-                new WARCWriterPoolSettingsData("", "", -1, false, null, null, generator));
+                new WARCWriterPoolSettingsData("", "", -1, !compressBz2, null, null, generator));
 
         // warcinfo record
         writer.writeWarcinfoRecord(warc.getName(),
@@ -170,8 +179,10 @@ public class NutchToWARCConverter
 
     /**
      * Input: Nutch segment folder (e.g. "20150303005802")
-     * Ouput: GZipped WARC file (e.g. "20150303005802.warc.bz2")
-     * Third parameter is an ouput file prefix (e.g. "prefix20150303005802.warc.bz2")
+     * Ouput: gz/bz2 WARC file (e.g. "20150303005802.warc.gz/bz2")
+     * Third parameter is an ouput file prefix (e.g. "prefix20150303005802.warc.gz")
+     * <p/>
+     * By default, the output is compressed with gz
      *
      * @param args args
      * @return int
@@ -201,11 +212,20 @@ public class NutchToWARCConverter
                 outputFilePrefix = otherArgs[2];
             }
 
+            boolean compressBz2 = false;
+            // do we want bz2 output?
+            if (otherArgs.length >= 4) {
+                compressBz2 = "bz2".equals(otherArgs[3]);
+            }
+
             Path file = new Path(segmentDir, Content.DIR_NAME + "/part-00000/data");
+
+            String extension = ".warc." + (compressBz2 ? "bz2" : "gz");
 
             String segmentName = new File(segmentDir).getName();
             nutchSegmentToWARCFile(file,
-                    new File(outDir, outputFilePrefix + segmentName + ".warc.bz2"), conf);
+                    new File(outDir, outputFilePrefix + segmentName + extension), conf,
+                    compressBz2);
 
             fs.close();
         }
