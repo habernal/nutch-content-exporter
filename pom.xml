@@ -107,7 +107,7 @@
 							<transformers>
 								<transformer
 										implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>net.sf.nutchcontentexporter.NutchContentExporter
+									<mainClass>net.sf.nutchcontentexporter.NutchToWARCConverter
 									</mainClass>
 								</transformer>
 							</transformers>

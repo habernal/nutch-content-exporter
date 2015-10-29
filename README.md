@@ -4,17 +4,16 @@ Simple command line java program for exporting HTML pages crawled by Apache Nutc
 
 Copyright (c) 2015 Ivan Habernal
 
-## Exporting segment content to .warc.bz2 file
+## Exporting segment content to .warc.bz2 file (default)
 
 Usage:
 
     $mvn package
-    $java -cp target/nutchcontentexporter-1.0-SNAPSHOT.jar \
-    net.sf.nutchcontentexporter.NutchContentExporter segment-dir output-dir [output-prefix]
+    $java -jar target/nutchcontentexporter-1.0-SNAPSHOT.jar segment-dir output-dir [output-prefix]
 
 for example
 
-    $java -cp target/nutchcontentexporter-1.0-SNAPSHOT.jar /tmp/crawl/20150109134429/ \
+    $java -jar target/nutchcontentexporter-1.0-SNAPSHOT.jar /tmp/crawl/20150109134429/ \
     /tmp/out prefix_
 
 where the input folder is the Nutch segment
@@ -52,11 +51,13 @@ It exports only `text/xml` and `text/html` content type; see `NutchToWARCConvert
 Usage:
 
     $mvn package
-    $java -jar target/nutchcontentexporter-1.0-SNAPSHOT.jar segment-dir output-dir
+    $java -cp nutchcontentexporter-1.0-SNAPSHOT.jar net.sf.nutchcontentexporter.NutchContentExporter \
+    segment-dir output-dir
 
 for example
 
-    $java -jar target/nutchcontentexporter-1.0-SNAPSHOT.jar /tmp/crawl/20150109134429/ /tmp/outhtml
+    $java -cp target/nutchcontentexporter-1.0-SNAPSHOT.jar net.sf.nutchcontentexporter.NutchContentExporter \
+    /tmp/crawl/20150109134429/ /tmp/outhtml
 
 where the input folder is the Nutch segment with the same structure as above. The output files are stored under the original URL with all slashes ("/") replaced by three
 underlines ("___"), e.g.
