@@ -56,6 +56,16 @@ public class NutchToWARCConverter
 {
     // Thu, 01 Jan 1970 00:00:01 GMT
     private static final String DEFAULT_WARC_DATE = "1000";
+    private static final long FILE_LIMIT_1GB = (long) 10e8;
+
+    // counter
+    private long totalBytesWritten = 0L;
+
+    // counter
+    private int totalFilesWritten = 0;
+
+    // counter
+    private long entriesCounter = 0L;
 
     protected RecordIDGenerator generator = new UUIDGenerator();
 
@@ -78,23 +88,62 @@ public class NutchToWARCConverter
     /**
      * Converts a content from Nutch stored in a segment folder into a bz2 WARC file
      *
-     * @param segmentFile Nutch segment folder
-     * @param warc        output warc file
-     * @param conf        hadoop configuraion
-     * @param compressBz2
-     * @throws IOException
+     * @param segmentFile   Nutch segment folder
+     * @param outDir        output warc file
+     * @param fileName
+     * @param fileExtension
+     * @param conf          hadoop configuraion
+     * @param compressBz2   @throws IOException
      * @throws ParseException
      */
-    public void nutchSegmentToWARCFile(Path segmentFile, File warc,
-            Configuration conf, boolean compressBz2)
+    public void nutchSegmentToWARCFile(Path segmentFile, File outDir, String fileName,
+            String fileExtension, Configuration conf, boolean compressBz2)
             throws IOException, ParseException
     {
         // reader for hadoop sequence file
         SequenceFile.Reader reader = new SequenceFile.Reader(conf,
                 SequenceFile.Reader.file(segmentFile));
 
+        // get writer
+        WARCWriter writer = prepareOutputWarcFile(outDir, fileName, this.totalFilesWritten,
+                fileExtension, compressBz2);
+
+        Text key = new Text();
+        Content content = new Content();
+
+        while (reader.next(key, content)) {
+            write(writer, content);
+
+            // close file and create a new one if limit reached
+            if (this.totalBytesWritten > FILE_LIMIT_1GB) {
+                writer.close();
+                // reset counters
+                this.totalFilesWritten++;
+                this.totalBytesWritten = 0;
+
+                // new output
+                writer = prepareOutputWarcFile(outDir, fileName, this.totalFilesWritten,
+                        fileExtension, compressBz2);
+            }
+        }
+
+        writer.close();
+        reader.close();
+
+        System.out.println("Total WARC entries: " + entriesCounter);
+    }
+
+    public WARCWriter prepareOutputWarcFile(File outputDir, String fileName, int totalFilesWritten,
+            String fileExtension, boolean compressBz2)
+            throws IOException
+    {
         // create a warc writer
         OutputStream outputStream;
+
+        File warc = new File(outputDir, fileName + String
+                .format(Locale.ENGLISH, "_%02d%s", totalFilesWritten, fileExtension));
+
+        System.out.println("Writing to " + warc);
 
         if (compressBz2) {
             // we don't compress using the built-in GZ support, use bz2 instead
@@ -108,19 +157,12 @@ public class NutchToWARCConverter
         WARCWriter writer = new WARCWriter(new AtomicInteger(), outputStream, warc,
                 new WARCWriterPoolSettingsData("", "", -1, !compressBz2, null, null, generator));
 
-        // warcinfo record
+        // warc info record
         writer.writeWarcinfoRecord(warc.getName(),
                 "Made by " + this.getClass().getName() + "/" + getRevision());
 
-        Text key = new Text();
-        Content content = new Content();
+        return writer;
 
-        while (reader.next(key, content)) {
-            write(writer, content);
-        }
-
-        writer.close();
-        reader.close();
     }
 
     private static String getRevision()
@@ -187,7 +229,11 @@ public class NutchToWARCConverter
         // and write only if we accept this content
         if (acceptExport) {
             writer.writeRecord(recordInfo);
+
+            totalBytesWritten += byteContent.length;
+            entriesCounter++;
         }
+
     }
 
     /**
@@ -236,8 +282,7 @@ public class NutchToWARCConverter
             String extension = ".warc." + (compressBz2 ? "bz2" : "gz");
 
             String segmentName = new File(segmentDir).getName();
-            nutchSegmentToWARCFile(file,
-                    new File(outDir, outputFilePrefix + segmentName + extension), conf,
+            nutchSegmentToWARCFile(file, outDir, outputFilePrefix + segmentName, extension, conf,
                     compressBz2);
 
             fs.close();

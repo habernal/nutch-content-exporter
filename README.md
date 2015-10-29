@@ -42,9 +42,11 @@ where the input folder is the Nutch segment
                 ├── data
                 └── index
 
-will generate `/tmp/out/prefix_20150109134429.warc.bz2`
+will generate `/tmp/out/prefix_20150109134429_00.warc.bz2`
 
 It exports only `text/xml` and `text/html` content type; see `NutchToWARCConverter.main()`
+
+The output file size is roughly limited not exceed 500 MB, so multiple files will be written with different suffixes (`_00.warc.gz`, `_01.warc.gz`, etc.).
 
 ## Exporting uncompressed html files directly to file system
 
