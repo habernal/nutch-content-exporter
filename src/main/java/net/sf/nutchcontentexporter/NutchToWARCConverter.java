@@ -17,7 +17,6 @@
 package net.sf.nutchcontentexporter;
 
 import net.sf.nutchcontentexporter.filter.ContentTypeFilter;
-import net.sf.nutchcontentexporter.filter.CreativeCommonsCandidateFilter;
 import net.sf.nutchcontentexporter.filter.ExportContentFilter;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 import org.apache.hadoop.conf.Configuration;
@@ -117,12 +116,11 @@ public class NutchToWARCConverter
         Content content = new Content();
 
         while (reader.next(key, content)) {
-            // write the content
             write(writer, content);
         }
 
-        reader.close();
         writer.close();
+        reader.close();
     }
 
     private static String getRevision()
@@ -137,6 +135,11 @@ public class NutchToWARCConverter
         recordInfo.setUrl(content.getUrl());
 
         byte[] byteContent = content.getContent();
+
+        // skip empty records
+        if (byteContent.length == 0) {
+            return;
+        }
 
         recordInfo.setContentStream(new ByteArrayInputStream(byteContent));
         recordInfo.setContentLength(byteContent.length);
@@ -250,8 +253,7 @@ public class NutchToWARCConverter
     {
         try {
             NutchToWARCConverter nutchToWARCConverter = new NutchToWARCConverter();
-            nutchToWARCConverter
-                    .addFilters(new ContentTypeFilter(), new CreativeCommonsCandidateFilter());
+            nutchToWARCConverter.addFilters(new ContentTypeFilter());
             ToolRunner.run(nutchToWARCConverter, args);
         }
         catch (Exception e) {
