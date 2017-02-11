@@ -17,6 +17,7 @@
 package net.sf.nutchcontentexporter;
 
 import net.sf.nutchcontentexporter.filter.ContentTypeFilter;
+import net.sf.nutchcontentexporter.filter.ContentTypeStatistics;
 import net.sf.nutchcontentexporter.filter.ExportContentFilter;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 import org.apache.hadoop.conf.Configuration;
@@ -209,9 +210,9 @@ public class NutchToWARCConverter
         recordInfo.setRecordId(generator.getRecordID());
 
         // add some extra headers from nutch
-        Set<String> extraHeaders = new HashSet<String>(Arrays.asList("nutch.crawl.score",
-                "nutch.segment.name", "Set-Cookie", "Content-Type", "Server", "Pragma",
-                "Cache-Control"));
+        Set<String> extraHeaders = new HashSet<String>(
+                Arrays.asList("nutch.crawl.score", "nutch.segment.name", "Set-Cookie",
+                        "Content-Type", "Server", "Pragma", "Cache-Control"));
 
         for (String extraHeader : extraHeaders) {
             String value = content.getMetadata().get(extraHeader);
@@ -298,8 +299,17 @@ public class NutchToWARCConverter
     {
         try {
             NutchToWARCConverter nutchToWARCConverter = new NutchToWARCConverter();
+            // disable for accepting everything
             nutchToWARCConverter.addFilters(new ContentTypeFilter());
+
+            // collecting content-type statistics
+            ContentTypeStatistics contentTypeStatistics = new ContentTypeStatistics();
+            nutchToWARCConverter.addFilters(contentTypeStatistics);
+
             ToolRunner.run(nutchToWARCConverter, args);
+
+            // show exported statistics
+            System.out.println(contentTypeStatistics.getFrequency());
         }
         catch (Exception e) {
             e.printStackTrace();

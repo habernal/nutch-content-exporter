@@ -33,21 +33,32 @@ public class ContentTypeFilter
      * We accept only html
      * In a text run, the distribution was text/xml=13%, text/html=83%, everything else<=1%
      */
-    private static final Set<String> ACCEPTED_CONTENT_TYPE
-            = new HashSet<String>(Arrays.asList("text/xml", "text/html"));
+    private static final Set<String> ACCEPTED_CONTENT_TYPE = new HashSet<String>(
+            Arrays.asList("text/xml", "text/html"));
 
-    @Override
-    public boolean acceptContent(WARCRecordInfo recordInfo)
+    /**
+     * Returns the given content-type or empty string, if not available
+     *
+     * @param recordInfo WARC record info
+     * @return string, never null
+     */
+    protected String getContentType(WARCRecordInfo recordInfo)
     {
         String contentTypeFull = recordInfo.getExtraHeaders().asMap().get("Nutch_Content-Type");
 
         if (contentTypeFull != null) {
             // split by ";"
-            String contentType = contentTypeFull.split(";")[0];
-
-            return ACCEPTED_CONTENT_TYPE.contains(contentType);
+            return contentTypeFull.split(";")[0];
         }
 
-        return false;
+        return "";
+    }
+
+    @Override
+    public boolean acceptContent(WARCRecordInfo recordInfo)
+    {
+        String contentType = getContentType(recordInfo);
+
+        return ACCEPTED_CONTENT_TYPE.contains(contentType);
     }
 }
