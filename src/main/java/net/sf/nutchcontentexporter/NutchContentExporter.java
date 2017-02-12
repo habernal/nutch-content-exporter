@@ -81,7 +81,7 @@ public class NutchContentExporter
 
             while (reader.next(key, content)) {
                 String filename =
-                        key.toString().replaceFirst("http://", "").replaceAll("/", "___").trim();
+                        key.toString().replaceAll("^http[s]?://", "").replaceAll("/$", "").replaceAll("/", "___").trim();
 
                 // limit the output file name to 255 characters
                 if (filename.length() > MAX_FILE_NAME_LENGTH) {
