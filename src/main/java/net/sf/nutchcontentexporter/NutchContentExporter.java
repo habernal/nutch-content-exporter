@@ -71,7 +71,8 @@ public class NutchContentExporter
                 }
             }
 
-            Path file = new Path(segment, Content.DIR_NAME + "/part-00000/data");
+            // Nutch 1.20 uses "part-r-00000" instead of older "part-00000
+            Path file = new Path(segment, Content.DIR_NAME + "/part-r-00000/data");
             // new 2.0 API
             SequenceFile.Reader reader = new SequenceFile.Reader(conf,
                     SequenceFile.Reader.file(file));
