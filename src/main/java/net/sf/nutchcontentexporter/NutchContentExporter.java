@@ -31,7 +31,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 
 /**
- * Simple commaind line tool for exporting HTML pages crawled by Apache Nutch
+ * Simple command line tool for exporting HTML pages crawled by Apache Nutch
  */
 public class NutchContentExporter
         extends Configured
