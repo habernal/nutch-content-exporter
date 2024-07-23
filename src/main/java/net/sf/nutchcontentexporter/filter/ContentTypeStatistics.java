@@ -15,7 +15,8 @@
  */
 package net.sf.nutchcontentexporter.filter;
 
-import org.apache.commons.math.stat.Frequency;
+
+import org.apache.commons.math3.stat.Frequency;
 import org.archive.io.warc.WARCRecordInfo;
 
 /**
