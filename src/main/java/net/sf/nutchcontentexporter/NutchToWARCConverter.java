@@ -278,7 +278,7 @@ public class NutchToWARCConverter
                 compressBz2 = "bz2".equals(otherArgs[3]);
             }
 
-            Path file = new Path(segmentDir, Content.DIR_NAME + "/part-00000/data");
+            Path file = new Path(segmentDir, Content.DIR_NAME + "/part-r-00000/data");
 
             String extension = ".warc." + (compressBz2 ? "bz2" : "gz");
 
